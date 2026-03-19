@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Board Platform Dashboard</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --panel: rgba(15, 23, 42, 0.88);
+      --panel-alt: rgba(30, 41, 59, 0.82);
+      --border: rgba(148, 163, 184, 0.22);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-strong: #0ea5e9;
+      --success: #22c55e;
+      --danger: #f87171;
+      --warning: #f59e0b;
+      --shadow: 0 24px 60px rgba(2, 6, 23, 0.45);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(14, 165, 233, 0.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.12), transparent 24%),
+        linear-gradient(180deg, #020617 0%, #0f172a 55%, #111827 100%);
+    }
+
+    .page {
+      width: min(1320px, calc(100% - 32px));
+      margin: 32px auto 48px;
+    }
+
+    .hero {
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(17, 24, 39, 0.8));
+      box-shadow: var(--shadow);
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 4vw, 3.25rem);
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 800px;
+      line-height: 1.6;
+    }
+
+    .config {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      background: rgba(8, 15, 32, 0.78);
+      overflow-x: auto;
+    }
+
+    .config code {
+      color: #7dd3fc;
+      white-space: pre;
+      display: block;
+      font-size: 0.95rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 26px 0 20px;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.7);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: 0.2s ease;
+    }
+
+    .tab-btn:hover,
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.24), rgba(34, 197, 94, 0.16));
+      border-color: rgba(56, 189, 248, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .tab-panel {
+      display: none;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 18px;
+    }
+
+    .tab-panel.active {
+      display: grid;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, var(--panel), var(--panel-alt));
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .card h2,
+    .card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .card p {
+      margin-top: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    form,
+    .control-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 0.92rem;
+      color: #cbd5e1;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: rgba(2, 6, 23, 0.6);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font: inherit;
+      outline: none;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: rgba(56, 189, 248, 0.7);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+    }
+
+    textarea {
+      min-height: 116px;
+      resize: vertical;
+    }
+
+    .inline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-top: 4px;
+    }
+
+    .checkbox-row input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      color: #03111f;
+      background: linear-gradient(135deg, var(--accent), #67e8f9);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+      box-shadow: 0 12px 24px rgba(14, 165, 233, 0.18);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(14, 165, 233, 0.24);
+    }
+
+    button.secondary {
+      background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+    }
+
+    button.warning {
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    }
+
+    button.danger {
+      background: linear-gradient(135deg, #fb7185, #f87171);
+    }
+
+    .result-block {
+      margin-top: 14px;
+    }
+
+    .result-label {
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    pre.output {
+      margin: 0;
+      min-height: 96px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: rgba(2, 6, 23, 0.78);
+      color: #bfdbfe;
+      overflow: auto;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: rgba(2, 6, 23, 0.78);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 640px;
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      vertical-align: top;
+    }
+
+    th {
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #7dd3fc;
+      background: rgba(15, 23, 42, 0.94);
+    }
+
+    td {
+      color: #dbeafe;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        width: min(100% - 20px, 1320px);
+        margin-top: 20px;
+      }
+
+      .hero,
+      .card {
+        padding: 18px;
+      }
+
+      .tabs {
+        gap: 10px;
+      }
+
+      .tab-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1>Job Board Platform Dashboard</h1>
+      <p>Single-file operations dashboard for Jobs, Applications, and Candidates services. Each action calls the live service directly and shows the response inline for quick testing.</p>
+      <div class="config">
+        <code>const CONFIG = {
+  JOBS_URL: "http://localhost:8002",
+  APPLICATIONS_URL: "http://localhost:8001",
+  CANDIDATES_URL: "http://localhost:3000"
+};</code>
+      </div>
+    </section>
+
+    <nav class="tabs" aria-label="Service Tabs">
+      <button class="tab-btn active" data-tab="jobs-tab">Jobs</button>
+      <button class="tab-btn" data-tab="applications-tab">Applications</button>
+      <button class="tab-btn" data-tab="candidates-tab">Candidates</button>
+    </nav>
+
+    <section id="jobs-tab" class="tab-panel active">
+      <article class="card">
+        <h2>Post Job</h2>
+        <p>Create a new job posting in the Jobs service.</p>
+        <form id="post-job-form">
+          <label>Title
+            <input name="title" required>
+          </label>
+          <label>Company
+            <input name="company" required>
+          </label>
+          <label>Location
+            <input name="location" required>
+          </label>
+          <label>Description
+            <textarea name="description" required></textarea>
+          </label>
+          <label>Tags (comma-separated)
+            <input name="tags" placeholder="python, fastapi, remote">
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" name="is_featured">
+            <span>Featured Job</span>
+          </label>
+          <button type="submit">Post Job</button>
+        </form>
+        <div class="result-block">
+          <div class="result-label">Response</div>
+          <pre id="post-job-output" class="output"></pre>
+        </div>
+      </article>
+
+      <article class="card full">
+        <h2>Browse Jobs</h2>
+        <p>List, search, and highlight featured jobs.</p>
+        <div class="inline">
+          <button id="list-jobs-btn" type="button">List All Jobs</button>
+          <label>Search Jobs
+            <input id="search-jobs-query" placeholder="Search by title, location, or tag">
+          </label>
+          <button id="search-jobs-btn" type="button" class="secondary">Search Jobs</button>
+          <button id="featured-jobs-btn" type="button" class="secondary">Featured Jobs</button>
+        </div>
+        <div class="result-block">
+          <div class="result-label">Table Output</div>
+          <div id="jobs-table-output" class="table-wrap"></div>
+        </div>
+        <div class="result-block">
+          <div class="result-label">Raw Response</div>
+          <pre id="jobs-raw-output" class="output"></pre>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Close Job</h2>
+        <p>Mark a job as closed by ID.</p>
+        <div class="control-stack">
+          <label>Job ID
+            <input id="close-job-id" placeholder="Enter job id">
+          </label>
+          <button id="close-job-btn" type="button" class="danger">Close Job</button>
+        </div>
+        <div class="result-block">
+          <div class="result-label">Response</div>
+          <pre id="close-job-output" class="output"></pre>
+        </div>
+      </article>
+    </section>
+
+    <section id="applications-tab" class="tab-panel">
+      <article class="card">
+        <h2>Apply for Job</h2>
+        <p>Create a new application entry in PostgreSQL.</p>
+        <form id="apply-form">
+          <label>Job ID
+            <input name="job_id" required>
+          </label>
+          <label>Candidate ID
+            <input name="candidate_id" required>
+          </label>
+          <label>Notes
+            <textarea name="notes"></textarea>
+          </label>
+          <button type="submit">Apply</button>
+        </form>
+        <div class="result-block">
+          <div class="result-label">Response</div>
+          <pre id="apply-output" class="output"></pre>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Application Status</h2>
+        <p>Fetch, shortlist, or reject an application by ID.</p>
+        <div class="control-stack">
+          <label>Application ID
+            <input id="application-id-input" placeholder="Enter application id">
+          </label>
+          <div class="inline">
+            <button id="get-status-btn" type="button">Get Status</button>
+            <button id="shortlist-btn" type="button" class="warning">Shortlist</button>
+            <button id="reject-btn" type="button" class="danger">Reject</button>
+          </div>
+        </div>
+        <div class="result-block">
+          <div class="result-label">Response</div>
+          <pre id="application-status-output" class="output"></pre>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Hiring Pipeline</h2>
+        <p>Show the count of applications by status for a specific job.</p>
+        <div class="control-stack">
+          <label>Job ID
+            <input id="pipeline-job-id" placeholder="Enter job id">
+          </label>
+          <button id="pipeline-btn" type="button" class="secondary">Get Hiring Pipeline</button>
+        </div>
+        <div class="result-block">
+          <div class="result-label">Response</div>
+          <pre id="pipeline-output" class="output"></pre>
+        </div>
+      </article>
+    </section>
+
+    <section id="candidates-tab" class="tab-panel">
+      <article class="card">
+        <h2>Create Profile</h2>
+        <p>Create a candidate profile with skills and experience.</p>
+        <form id="candidate-create-form">
+          <label>Name
+            <input name="name" required>
+          </label>
+          <label>Email
+            <input name="email" type="email" required>
+          </label>
+          <label>Skills (comma-separated)
+            <input name="skills" placeholder="javascript, node, mongo">
+          </label>
+          <label>Experience Years
+            <input name="experience_years" type="number" min="0" value="0">
+          </label>
+          <button type="submit">Create Profile</button>
+        </form>
+        <div class="result-block">
+          <div class="result-label">Response</div>
+          <pre id="candidate-create-output" class="output"></pre>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Update Resume URL</h2>
+        <p>Attach or replace the resume URL for a candidate.</p>
+        <div class="control-stack">
+          <label>Candidate ID
+            <input id="resume-candidate-id" placeholder="Enter candidate id">
+          </label>
+          <label>Resume URL
+            <input id="resume-url" placeholder="https://example.com/resume.pdf">
+          </label>
+          <button id="update-resume-btn" type="button">Update Resume URL</button>
+        </div>
+        <div class="result-block">
+          <div class="result-label">Response</div>
+          <pre id="resume-output" class="output"></pre>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Update Skills</h2>
+        <p>Replace the candidate skill list.</p>
+        <div class="control-stack">
+          <label>Candidate ID
+            <input id="skills-candidate-id" placeholder="Enter candidate id">
+          </label>
+          <label>Skills (comma-separated)
+            <input id="skills-input" placeholder="react, typescript, testing">
+          </label>
+          <button id="update-skills-btn" type="button" class="secondary">Update Skills</button>
+        </div>
+        <div class="result-block">
+          <div class="result-label">Response</div>
+          <pre id="skills-output" class="output"></pre>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Update Portfolio</h2>
+        <p>Replace portfolio links for a candidate.</p>
+        <div class="control-stack">
+          <label>Candidate ID
+            <input id="portfolio-candidate-id" placeholder="Enter candidate id">
+          </label>
+          <label>Portfolio Links (comma-separated)
+            <input id="portfolio-links" placeholder="https://site1.dev, https://site2.dev">
+          </label>
+          <button id="update-portfolio-btn" type="button" class="secondary">Update Portfolio</button>
+        </div>
+        <div class="result-block">
+          <div class="result-label">Response</div>
+          <pre id="portfolio-output" class="output"></pre>
+        </div>
+      </article>
+
+      <article class="card full">
+        <h2>Match Score</h2>
+        <p>Compare a candidate profile with a specific job and return the calculated match score.</p>
+        <div class="inline">
+          <label>Candidate ID
+            <input id="match-candidate-id" placeholder="Enter candidate id">
+          </label>
+          <label>Job ID
+            <input id="match-job-id" placeholder="Enter job id">
+          </label>
+          <button id="match-score-btn" type="button">Get Match Score</button>
+        </div>
+        <div class="result-block">
+          <div class="result-label">Response</div>
+          <pre id="match-output" class="output"></pre>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    const CONFIG = {
+      JOBS_URL: "http://localhost:8002",
+      APPLICATIONS_URL: "http://localhost:8001",
+      CANDIDATES_URL: "http://localhost:3000"
+    };
+
+    const byId = (id) => document.getElementById(id);
+
+    function setOutput(id, payload, isError = false) {
+      const el = byId(id);
+      el.style.color = isError ? "#fecaca" : "#bfdbfe";
+      el.textContent = typeof payload === "string" ? payload : JSON.stringify(payload, null, 2);
+    }
+
+    function parseCsv(value) {
+      return value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    async function request(url, options = {}) {
+      try {
+        const response = await fetch(url, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
+          },
+          ...options
+        });
+
+        const text = await response.text();
+        let data;
+
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch (parseError) {
+          data = text;
+        }
+
+        if (!response.ok) {
+          const message = typeof data === "string" ? data : (data.detail || data.error || JSON.stringify(data));
+          throw new Error(`HTTP ${response.status}: ${message}`);
+        }
+
+        return data;
+      } catch (error) {
+        throw new Error(error.message || "Request failed");
+      }
+    }
+
+    function renderTable(targetId, rows) {
+      const container = byId(targetId);
+
+      if (!Array.isArray(rows) || rows.length === 0) {
+        container.innerHTML = '<div style="padding:16px" class="empty">No records found.</div>';
+        return;
+      }
+
+      const columns = Array.from(
+        rows.reduce((set, row) => {
+          Object.keys(row).forEach((key) => set.add(key));
+          return set;
+        }, new Set())
+      );
+
+      const header = columns.map((column) => `<th>${column}</th>`).join("");
+      const body = rows.map((row) => {
+        const cells = columns.map((column) => {
+          const value = row[column];
+          if (Array.isArray(value)) {
+            return `<td>${value.join(", ")}</td>`;
+          }
+          if (value && typeof value === "object") {
+            return `<td>${JSON.stringify(value)}</td>`;
+          }
+          return `<td>${value ?? ""}</td>`;
+        }).join("");
+        return `<tr>${cells}</tr>`;
+      }).join("");
+
+      container.innerHTML = `<table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.tab === tabId);
+      });
+      document.querySelectorAll(".tab-panel").forEach((panel) => {
+        panel.classList.toggle("active", panel.id === tabId);
+      });
+    }
+
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+    });
+
+    byId("post-job-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.target);
+      const payload = {
+        title: form.get("title"),
+        company: form.get("company"),
+        location: form.get("location"),
+        description: form.get("description"),
+        tags: parseCsv(form.get("tags") || ""),
+        is_featured: Boolean(form.get("is_featured"))
+      };
+
+      try {
+        const data = await request(`${CONFIG.JOBS_URL}/jobs`, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        setOutput("post-job-output", data);
+        event.target.reset();
+      } catch (error) {
+        setOutput("post-job-output", error.message, true);
+      }
+    });
+
+    byId("list-jobs-btn").addEventListener("click", async () => {
+      try {
+        const data = await request(`${CONFIG.JOBS_URL}/jobs`);
+        renderTable("jobs-table-output", data);
+        setOutput("jobs-raw-output", data);
+      } catch (error) {
+        renderTable("jobs-table-output", []);
+        setOutput("jobs-raw-output", error.message, true);
+      }
+    });
+
+    byId("search-jobs-btn").addEventListener("click", async () => {
+      const query = byId("search-jobs-query").value.trim();
+      if (!query) {
+        setOutput("jobs-raw-output", "Search term is required.", true);
+        return;
+      }
+
+      try {
+        const data = await request(`${CONFIG.JOBS_URL}/jobs/search?q=${encodeURIComponent(query)}`);
+        renderTable("jobs-table-output", data);
+        setOutput("jobs-raw-output", data);
+      } catch (error) {
+        renderTable("jobs-table-output", []);
+        setOutput("jobs-raw-output", error.message, true);
+      }
+    });
+
+    byId("featured-jobs-btn").addEventListener("click", async () => {
+      try {
+        const data = await request(`${CONFIG.JOBS_URL}/jobs/featured`);
+        renderTable("jobs-table-output", data);
+        setOutput("jobs-raw-output", data);
+      } catch (error) {
+        renderTable("jobs-table-output", []);
+        setOutput("jobs-raw-output", error.message, true);
+      }
+    });
+
+    byId("close-job-btn").addEventListener("click", async () => {
+      const jobId = byId("close-job-id").value.trim();
+      if (!jobId) {
+        setOutput("close-job-output", "Job id is required.", true);
+        return;
+      }
+
+      try {
+        const data = await request(`${CONFIG.JOBS_URL}/jobs/${encodeURIComponent(jobId)}/close`, {
+          method: "PATCH"
+        });
+        setOutput("close-job-output", data);
+      } catch (error) {
+        setOutput("close-job-output", error.message, true);
+      }
+    });
+
+    byId("apply-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.target);
+      const payload = {
+        job_id: form.get("job_id"),
+        candidate_id: form.get("candidate_id"),
+        notes: form.get("notes") || null
+      };
+
+      try {
+        const data = await request(`${CONFIG.APPLICATIONS_URL}/applications/apply`, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        setOutput("apply-output", data);
+        event.target.reset();
+      } catch (error) {
+        setOutput("apply-output", error.message, true);
+      }
+    });
+
+    async function handleApplicationAction(action, outputId) {
+      const appId = byId("application-id-input").value.trim();
+      if (!appId) {
+        setOutput(outputId, "Application id is required.", true);
+        return;
+      }
+
+      const urlMap = {
+        status: `${CONFIG.APPLICATIONS_URL}/applications/${encodeURIComponent(appId)}/status`,
+        shortlist: `${CONFIG.APPLICATIONS_URL}/applications/${encodeURIComponent(appId)}/shortlist`,
+        reject: `${CONFIG.APPLICATIONS_URL}/applications/${encodeURIComponent(appId)}/reject`
+      };
+
+      const methodMap = {
+        status: "GET",
+        shortlist: "PATCH",
+        reject: "PATCH"
+      };
+
+      try {
+        const data = await request(urlMap[action], { method: methodMap[action] });
+        setOutput(outputId, data);
+      } catch (error) {
+        setOutput(outputId, error.message, true);
+      }
+    }
+
+    byId("get-status-btn").addEventListener("click", () => handleApplicationAction("status", "application-status-output"));
+    byId("shortlist-btn").addEventListener("click", () => handleApplicationAction("shortlist", "application-status-output"));
+    byId("reject-btn").addEventListener("click", () => handleApplicationAction("reject", "application-status-output"));
+
+    byId("pipeline-btn").addEventListener("click", async () => {
+      const jobId = byId("pipeline-job-id").value.trim();
+      if (!jobId) {
+        setOutput("pipeline-output", "Job id is required.", true);
+        return;
+      }
+
+      try {
+        const data = await request(`${CONFIG.APPLICATIONS_URL}/applications/pipeline/${encodeURIComponent(jobId)}`);
+        setOutput("pipeline-output", data);
+      } catch (error) {
+        setOutput("pipeline-output", error.message, true);
+      }
+    });
+
+    byId("candidate-create-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.target);
+      const payload = {
+        name: form.get("name"),
+        email: form.get("email"),
+        skills: parseCsv(form.get("skills") || ""),
+        experience_years: Number(form.get("experience_years") || 0)
+      };
+
+      try {
+        const data = await request(`${CONFIG.CANDIDATES_URL}/candidates`, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        setOutput("candidate-create-output", data);
+        event.target.reset();
+      } catch (error) {
+        setOutput("candidate-create-output", error.message, true);
+      }
+    });
+
+    byId("update-resume-btn").addEventListener("click", async () => {
+      const candidateId = byId("resume-candidate-id").value.trim();
+      const resumeUrl = byId("resume-url").value.trim();
+      if (!candidateId || !resumeUrl) {
+        setOutput("resume-output", "Candidate id and resume URL are required.", true);
+        return;
+      }
+
+      try {
+        const data = await request(`${CONFIG.CANDIDATES_URL}/candidates/${encodeURIComponent(candidateId)}/resume`, {
+          method: "PUT",
+          body: JSON.stringify({ resume_url: resumeUrl })
+        });
+        setOutput("resume-output", data);
+      } catch (error) {
+        setOutput("resume-output", error.message, true);
+      }
+    });
+
+    byId("update-skills-btn").addEventListener("click", async () => {
+      const candidateId = byId("skills-candidate-id").value.trim();
+      const skills = parseCsv(byId("skills-input").value.trim());
+      if (!candidateId) {
+        setOutput("skills-output", "Candidate id is required.", true);
+        return;
+      }
+
+      try {
+        const data = await request(`${CONFIG.CANDIDATES_URL}/candidates/${encodeURIComponent(candidateId)}/skills`, {
+          method: "PUT",
+          body: JSON.stringify({ skills })
+        });
+        setOutput("skills-output", data);
+      } catch (error) {
+        setOutput("skills-output", error.message, true);
+      }
+    });
+
+    byId("update-portfolio-btn").addEventListener("click", async () => {
+      const candidateId = byId("portfolio-candidate-id").value.trim();
+      const portfolioLinks = parseCsv(byId("portfolio-links").value.trim());
+      if (!candidateId) {
+        setOutput("portfolio-output", "Candidate id is required.", true);
+        return;
+      }
+
+      try {
+        const data = await request(`${CONFIG.CANDIDATES_URL}/candidates/${encodeURIComponent(candidateId)}/portfolio`, {
+          method: "PUT",
+          body: JSON.stringify({ portfolio_links: portfolioLinks })
+        });
+        setOutput("portfolio-output", data);
+      } catch (error) {
+        setOutput("portfolio-output", error.message, true);
+      }
+    });
+
+    byId("match-score-btn").addEventListener("click", async () => {
+      const candidateId = byId("match-candidate-id").value.trim();
+      const jobId = byId("match-job-id").value.trim();
+      if (!candidateId || !jobId) {
+        setOutput("match-output", "Candidate id and job id are required.", true);
+        return;
+      }
+
+      try {
+        const data = await request(`${CONFIG.CANDIDATES_URL}/candidates/${encodeURIComponent(candidateId)}/match/${encodeURIComponent(jobId)}`);
+        setOutput("match-output", data);
+      } catch (error) {
+        setOutput("match-output", error.message, true);
+      }
+    });
+
+    setOutput("post-job-output", "Ready.");
+    setOutput("jobs-raw-output", "Use the controls above to fetch jobs.");
+    setOutput("close-job-output", "Awaiting action.");
+    setOutput("apply-output", "Awaiting action.");
+    setOutput("application-status-output", "Awaiting action.");
+    setOutput("pipeline-output", "Awaiting action.");
+    setOutput("candidate-create-output", "Awaiting action.");
+    setOutput("resume-output", "Awaiting action.");
+    setOutput("skills-output", "Awaiting action.");
+    setOutput("portfolio-output", "Awaiting action.");
+    setOutput("match-output", "Awaiting action.");
+    renderTable("jobs-table-output", []);
+  </script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+version: "3.9"
+
+services:
+
+  # ── INFRASTRUCTURE ──────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: jb_postgres
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jobboard_net
+
+  mongo:
+    image: mongo:7.0
+    container_name: jb_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jobboard_net
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: jb_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./infra/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jobboard_net
+
+  # ── APP SERVICES (uncomment in later phases) ────────────────────
+
+  jobs:
+    build: ./services/jobs
+    container_name: jb_jobs
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8002:8002"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - jobboard_net
+
+  candidates:
+    build: ./services/candidates
+    container_name: jb_candidates
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      JOBS_SERVICE_URL: http://jobs:8002
+    ports:
+      - "3000:3000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - jobboard_net
+
+  applications:
+    build: ./services/applications
+    container_name: jb_applications
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - jobboard_net
+
+  rq_worker:
+    build: ./services/applications
+    container_name: jb_rq_worker
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      JOBS_SERVICE_URL: http://jobs:8002
+    command: python worker.py
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - jobboard_net
+
+# ── VOLUMES ───────────────────────────────────────────────────────
+volumes:
+  pg_data:
+  mongo_data:
+  redis_data:
+
+# ── NETWORKS ──────────────────────────────────────────────────────
+networks:
+  jobboard_net:
+    driver: bridge
