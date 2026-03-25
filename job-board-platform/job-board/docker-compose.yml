@@ -123,6 +123,25 @@ services:
     networks:
       - jobboard_net
 
+  dashboard:
+    build:
+      context: ./job-board-dashboard
+      dockerfile: Dockerfile
+      args:
+        VITE_JOBS_URL: ${VITE_JOBS_URL:-http://localhost:8002}
+        VITE_APPLICATIONS_URL: ${VITE_APPLICATIONS_URL:-http://localhost:8001}
+        VITE_CANDIDATES_URL: ${VITE_CANDIDATES_URL:-http://localhost:3000}
+    container_name: jb_dashboard
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - jobs
+      - applications
+      - candidates
+    networks:
+      - jobboard_net
+
 # ── VOLUMES ───────────────────────────────────────────────────────
 volumes:
   pg_data:
